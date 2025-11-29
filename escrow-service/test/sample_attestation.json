@@ -1,0 +1,36 @@
+{
+  "ok": false,
+  "attestation": {
+    "loanId": "loan-123",
+    "proofCommit": "fake-commit",
+    "borrowerPkh": "addr_test1q_mock",
+    "flags": {
+      "income_ok": true,
+      "collateral_ratio_ok": false,
+      "wallet_ok": true,
+      "freshness_ok": true,
+      "debt_ok": false
+    },
+    "oracleTimestamp": 1764407008,
+    "riskScore": 0.5,
+    "preset": "SAFE",
+    "expiry": 1764407608,
+    "nonce": "386f760b403bc9912d719078225babf2"
+  },
+  "signature": "efd8d8c9c1236a5f0fcd8304c2794ed17ce043ee33358173c5f226788f362df126cadc0dc1bb71594104675da8c6d692f2abbc1585337f424d1699fd7c122e0c",
+  "oracle": {
+    "asset": "ADA",
+    "price": 1.4937,
+    "timestamp": 1764407008,
+    "signature": "a48d15906be7d29e59172d27800c093adf0a62bd9938a4421b41d5ceb50b87cb26c9f67d035ffdcaf8e915d3c858eba31421a5626c012df9e14c0b6323e45b05"
+  },
+  "meta": {
+    "sigValid": true,
+    "riskScore": 0.5,
+    "preset": "SAFE",
+    "proofOk": true,
+    "borrowerOk": true,
+    "oracleFresh": true,
+    "collateralRatio": 1.34433
+  }
+}

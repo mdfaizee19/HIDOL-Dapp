@@ -1,0 +1,82 @@
+// loan_eligibility.compact
+// Midnight Compact circuit skeleton for loan eligibility.
+// NOTE: syntax is representative — use Midnight docs to tweak minor syntax if needed.
+// This file documents the algebraic constraints precisely.
+
+pub fn main(pub_inputs, priv_inputs) -> (flags_out) {
+    // Public inputs:
+    // pub_inputs.loanId            bytes
+    // pub_inputs.loanAmount        integer (e.g., cents)
+    // pub_inputs.collateralAmount  integer
+    // pub_inputs.oraclePrice       fixed-point (price scaled by 1e6)
+    // pub_inputs.oracleTimestamp   unix seconds
+    // pub_inputs.requiredCollateralRatio fixed-point (scaled by 1e6)
+    // pub_inputs.incomeThreshold   integer
+    // pub_inputs.maxOracleAge      integer seconds
+
+    // Private inputs:
+    // priv_inputs.incomeRaw        integer
+    // priv_inputs.debtFlagRaw      0 or 1
+    // priv_inputs.borrowerSignature bytes
+    // priv_inputs.borrowerPubKey   bytes
+    // NOTE: signature verification may require helper libs or to use a public input of signature verification
+
+    // Output flags: each 1 if ok, 0 if fail
+    let income_ok        = 0;
+    let debt_ok          = 0;
+    let collateral_ok    = 0;
+    let freshness_ok     = 0;
+    let wallet_ok        = 0;
+
+    // 1) income > threshold
+    if priv_inputs.incomeRaw > pub_inputs.incomeThreshold {
+        income_ok = 1;
+    } else {
+        income_ok = 0;
+    }
+
+    // 2) debtFlagRaw == 0
+    if priv_inputs.debtFlagRaw == 0 {
+        debt_ok = 1;
+    } else {
+        debt_ok = 0;
+    }
+
+    // 3) collateralAmount * oraclePrice >= loanAmount * requiredCollateralRatio
+    // Using scaled fixed-point multiply:
+    // collateralValue = collateralAmount * oraclePrice  (oraclePrice scaled by 1e6)
+    // requiredValue = loanAmount * requiredCollateralRatio (ratio scaled by 1e6)
+    let collateralValue = pub_inputs.collateralAmount * pub_inputs.oraclePrice;
+    let requiredValue   = pub_inputs.loanAmount * pub_inputs.requiredCollateralRatio;
+    if collateralValue >= requiredValue {
+        collateral_ok = 1;
+    } else {
+        collateral_ok = 0;
+    }
+
+    // 4) oracle freshness: now will be provided as a public input by verifier; compare
+    // For compact circuits, either the 'now' is provided as public input or freshness is asserted externally.
+    // Here we expect pub_inputs.currentTime to be given by the verifier (trusted input).
+    if (pub_inputs.currentTime - pub_inputs.oracleTimestamp) <= pub_inputs.maxOracleAge {
+        freshness_ok = 1;
+    } else {
+        freshness_ok = 0;
+    }
+
+    // 5) wallet ownership check:
+    // We expect borrowerSignature to be a signature of loanId made by borrowerPubKey.
+    // Exact signature verification may need helper opcodes not shown here.
+    // For clarity, we assert a helper 'verify_signature' is available and returns 1 on valid.
+    wallet_ok = verify_signature(priv_inputs.borrowerPubKey, priv_inputs.borrowerSignature, pub_inputs.loanId);
+
+    // Pack flags into a small array or bitfield
+    let flags_out = {
+        income_ok: income_ok,
+        collateral_ratio_ok: collateral_ok,
+        wallet_ok: wallet_ok,
+        freshness_ok: freshness_ok,
+        debt_ok: debt_ok
+    };
+
+    return flags_out;
+}

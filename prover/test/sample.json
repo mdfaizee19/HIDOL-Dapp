@@ -1,0 +1,15 @@
+{
+  "loanId": "0xaaaabbbbccccddddeeeeffff0000111122223333444455556666777788889999",
+  "borrowerPubKey": "0xdeadbeefcafebeef00112233445566778899aabbccddeeff00112233445566",
+  "borrowerSignature": "0x11223344556677889900aabbccddeeff",
+  "loanAmount": 1000,
+  "collateralAmount": 2000,
+  "oraclePrice": 1.5,
+  "oracleTimestamp": 1710000000,
+  "incomeRaw": 60000,
+  "debtFlagRaw": false,
+  "requiredCollateralRatio": 1.25,
+  "incomeThreshold": 40000,
+  "maxOracleAge": 600,
+  "currentTime": 1710000300
+}

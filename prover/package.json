@@ -1,0 +1,11 @@
+{
+  "name": "prover",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node ./test/run-test.js"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  }
+}
