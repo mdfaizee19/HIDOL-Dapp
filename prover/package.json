@@ -1,6 +1,7 @@
 {
   "name": "prover",
   "version": "0.1.0",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
     "test": "node ./test/run-test.js"

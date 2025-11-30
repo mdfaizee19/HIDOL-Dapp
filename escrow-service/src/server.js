@@ -1,11 +1,13 @@
 // src/server.js
 import express from "express";
 import bodyParser from "body-parser";
+const app=express();
 
 import { validateAttestation } from "./verify.js";
 import * as escrow from "./escrow.js";
+import cors from "cors";
+app.use(cors());
 
-const app = express();
 app.use(bodyParser.json({ limit: "2mb" }));
 
 const PORT = process.env.PORT || 4001;
@@ -103,6 +105,23 @@ app.post("/close", (req, res) => {
 
     const result = escrow.closeLoan(loanId);
     return res.json({ ok: true, tx: result.tx });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Verify Attestation (Standalone)
+app.post("/verify", (req, res) => {
+  try {
+    const payload = req.body; // expects payload.attestation and payload.meta
+    const policy = { requireIncome: true, requireCollateralRatio: true, requireWallet: true, requireFreshness: true };
+    const v = validateAttestation(payload, policy);
+
+    if (!v.ok) {
+      return res.status(400).json({ ok: false, reason: v.reason, details: v.details });
+    }
+
+    return res.json({ ok: true, attestation: payload.attestation, meta: payload.meta });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });
   }

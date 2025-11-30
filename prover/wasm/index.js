@@ -1,5 +1,4 @@
 // wasm/index.js
-import crypto from "crypto";
 import { verifyWalletSignature } from "../src/sigverify.js";
 import { transcriptHash } from "../src/binding.js";
 
@@ -10,6 +9,19 @@ const isBrowser = (typeof window !== "undefined");
 const WASM_URL = "/prover/prover.wasm";       // browser (served as static asset)
 const WASM_PATH_NODE = new URL('./prover.wasm', import.meta.url).pathname;
 
+// Helper for SHA256
+async function sha256(msg) {
+  if (isBrowser) {
+    const msgBuffer = new TextEncoder().encode(msg);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } else {
+    const crypto = await import("crypto");
+    return crypto.createHash("sha256").update(msg).digest("hex");
+  }
+}
+
 // ---------------------------------------------------------------------
 // REAL WASM PROVER (replace this with actual Midnight WASM exports)
 // ---------------------------------------------------------------------
@@ -17,8 +29,13 @@ async function initRealWasmProver() {
   let wasmBytes;
 
   if (isBrowser) {
-    const resp = await fetch(WASM_URL);
-    wasmBytes = await resp.arrayBuffer();
+    try {
+      const resp = await fetch(WASM_URL);
+      if (!resp.ok) throw new Error("WASM fetch failed");
+      wasmBytes = await resp.arrayBuffer();
+    } catch (e) {
+      throw new Error("WASM not found");
+    }
   } else {
     // Node
     const fs = await import("fs");
@@ -60,7 +77,7 @@ async function initRealWasmProver() {
 // ---------------------------------------------------------------------
 // Deterministic fallback prover (secure version)
 // ---------------------------------------------------------------------
-function deterministicProver(inputs) {
+async function deterministicProver(inputs) {
   const income_ok = inputs.incomeRaw > inputs.incomeThreshold;
   const debt_ok = inputs.debtFlagRaw ? 0 : 1;
 
@@ -84,10 +101,7 @@ function deterministicProver(inputs) {
     oraclePrice: inputs.oraclePrice
   });
 
-  const proofBytes = crypto
-    .createHash("sha256")
-    .update("MIDNIGHT-FAKE|" + canonical)
-    .digest("hex");
+  const proofBytes = await sha256("MIDNIGHT-FAKE|" + canonical);
 
   const proofCommit = transcriptHash(inputs, proofBytes);
 
@@ -115,7 +129,7 @@ export async function initProver() {
     console.warn("[SECURE-MODE] No real WASM prover. Using fallback.");
     return {
       mode: "fallback",
-      runProof: async (inputs) => deterministicProver(inputs)
+      runProof: async (inputs) => await deterministicProver(inputs)
     };
   }
 }
